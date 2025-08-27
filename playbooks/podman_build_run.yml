@@ -1,0 +1,45 @@
+- name: Build & run Podman services
+  hosts: podman_hosts
+  become: true
+  vars_files:
+    - ../vars/services.yml
+  collections:
+    - containers.podman
+
+  tasks:
+    - name: Ensure Podman network exists
+      containers.podman.podman_network:
+        name: appnet
+        state: present
+
+    - name: Ensure volumes exist (from service defs)
+      containers.podman.podman_volume:
+        name: "{{ item.split(':')[0] }}"
+        state: present
+      loop: "{{ services | map(attribute='volumes') | flatten | default([]) }}"
+      when: item is defined
+
+    - name: Build images
+      containers.podman.podman_image:
+        name: "{{ item.name }}"
+        tag: "{{ item.tag | default('latest') }}"
+        path: "{{ item.context | default('.') }}"
+        file: "{{ item.dockerfile | default('Dockerfile') }}"
+        build:
+          args: "{{ item.build_args | default({}) }}"
+          no_cache: "{{ item.no_cache | default(false) }}"
+      loop: "{{ services }}"
+      register: build_results
+
+    - name: Start/recreate containers
+      containers.podman.podman_container:
+        name: "{{ item.name }}"
+        image: "{{ item.name }}:{{ item.tag | default('latest') }}"
+        state: started
+        recreate: true                      # replaces container if config/image changed
+        restart_policy: unless-stopped
+        env: "{{ common_env | combine(item.env | default({})) }}"
+        ports: "{{ item.ports | default([]) }}"
+        volumes: "{{ item.volumes | default([]) }}"
+        networks: "{{ item.networks | default(['appnet']) }}"
+      loop: "{{ services }}"

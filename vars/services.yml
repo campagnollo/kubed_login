@@ -1,0 +1,17 @@
+common_env:
+  CNC_DOMAIN: prod.infra.webex.com
+  CNC: mccprod
+  VAULT_ADDR: https://keeper.cisco.com
+  VAULT_NAMESPACE: meetpaas/mccprod
+
+services:
+  - name: ssh
+    context: ./apps/ssh
+    dockerfile: Dockerfile
+    tag: v1
+    build_args:
+      PYPI_MIRROR: https://pypi.org/simple
+    env:
+      PORT: "22"
+    ports: ["2222:22"]
+
