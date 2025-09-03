@@ -118,7 +118,7 @@ kubed() {
 
 # Then just run:
 kubed vault
-kubed wdfwgen-p-4
+kubed <cluster name>
 ```
 
 
@@ -126,7 +126,7 @@ kubed wdfwgen-p-4
 ```bash
 alias kubed='python3 /absolute/path/to/kubed_setter.py'
 kubed vault
-kubed wdfwgen-p-4
+kubed <cluster name>
 ```
 
 > If your script integrates with `kubectl`, you can now run `kubectl ...` using the environment from `.env` (e.g., `KUBECONFIG`). Consider sourcing `.env` in your shell or having your other tools load it automatically.
