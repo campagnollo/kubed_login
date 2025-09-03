@@ -8,7 +8,7 @@
       ' .env > .env.tmp && mv .env.tmp .env
     fi
 
-# .github/workflows/build-exe.yml
+
 name: build-exe
 on:
   push:
