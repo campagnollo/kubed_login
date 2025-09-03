@@ -1,6 +1,8 @@
 import os, sys, subprocess, yaml
 from pathlib import Path
 from dotenv import set_key, load_dotenv, find_dotenv
+import pyperclip
+
 
 
 def main(cluster_name):
@@ -49,6 +51,7 @@ def vault_load():
     dotenv_path = Path(".env")
     dotenv_path.touch()
     set_key(str(dotenv_path), "VAULT_TOKEN", vault_var, quote_mode="always")
+    pyperclip.copy("")
     print("Vault token key uploaded")
 
 
