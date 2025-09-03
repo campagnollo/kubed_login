@@ -1,0 +1,42 @@
+- name: Zero out values (preserve comments/blank lines)
+  shell: bash
+  run: |
+    if [ -f .env ]; then
+      awk -F= 'BEGIN{OFS="="}
+        /^[[:space:]]*#/ || /^[[:space:]]*$/ {print; next}
+        { $2=""; print }
+      ' .env > .env.tmp && mv .env.tmp .env
+    fi
+
+# .github/workflows/build-exe.yml
+name: build-exe
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build onefile exe
+        run: |
+          pyinstaller --onefile --name mytool ^
+            --add-data "config\\config.yaml;config" ^
+            src\\main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mytool-windows
+          path: dist/mytool.exe
