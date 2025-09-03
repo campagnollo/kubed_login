@@ -1993,3 +1993,5 @@ ca-onwrtm1:
   VAULT_ADDR: https://keeper.cisco.com
   VAULT_NAMESPACE: meetpaas/mccprod
   SIGN_ON: kubectl-wbx3 login ca-onwrtm1 --role k8s-admin
+na-nanana:
+  domain: na
