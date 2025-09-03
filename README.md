@@ -60,15 +60,15 @@ This is an example structure. Adapt the keys to what your tooling needs (they’
 
 ```yaml
 # clusters-trunc.yaml
-wdfwgen-p-4:
-  KUBECONFIG: "/Users/you/k8s/configs/wdfwgen-p-4.kubeconfig"
-  KUBE_CLUSTER: "wdfwgen-p-4"
+*********:
+  KUBECONFIG: "/Users/you/k8s/configs/**********"
+  KUBE_CLUSTER: "********"
   NAMESPACE: "default"
   VAULT_ADDR: "https://vault.example.com"
 
-wdfwmw-dc-1:
-  KUBECONFIG: "/Users/you/k8s/configs/wdfwmw-dc-1.kubeconfig"
-  KUBE_CLUSTER: "wdfwmw-dc-1"
+**********:
+  KUBECONFIG: "/Users/you/k8s/configs/*********"
+  KUBE_CLUSTER: "***********"
   NAMESPACE: "platform"
   VAULT_ADDR: "https://vault.example.com"
 ```
