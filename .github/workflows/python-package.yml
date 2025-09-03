@@ -52,14 +52,44 @@ jobs:
           if (-not (Test-Path "config\config.yaml")) {
             Write-Warning "config\config.yaml not found; remove --add-data or fix the path."
           }
-
-      # Build (PowerShell; no caret continuations needed)
-      - name: Build onefile exe
+      - name: Locate entrypoint (auto-detect)
         shell: pwsh
-        run: pyinstaller --onefile --name mytool --add-data "config\config.yaml;config" "$env:ENTRY"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: mytool-windows
-          path: dist/mytool.exe
+        run: |
+          # Show repo layout (first 3 levels) for debugging
+          Get-ChildItem -Recurse -Depth 3 | Select-Object FullName
+      
+          # Gather .py files, exclude typical junk dirs
+          $files = Get-ChildItem -Recurse -File -Include *.py |
+            Where-Object { $_.FullName -notmatch '\\\.git\\|\\venv\\|\\\.venv\\|\\env\\|\\dist\\|\\build\\|__pycache__' }
+      
+          if (-not $files) { throw "No .py files found. Set an explicit entrypoint." }
+      
+          # Prefer files with a main guard
+          $withGuard = @()
+          foreach ($f in $files) {
+            if (Select-String -Path $f.FullName -Pattern 'if\s*__name__\s*==\s*["'']__main__["'"]' -Quiet) {
+              $withGuard += $f
+            }
+          }
+      
+          # Then prefer typical names
+          $namePreferred = $files | Where-Object { $_.Name -match '(^|_)main\.py$|__main__\.py$|kubed|cli|tool|app' }
+      
+          $entry = ($withGuard + $namePreferred + $files) | Select-Object -Unique -First 1
+          if (-not $entry) {
+            throw "Couldn't locate an entrypoint. Set env ENTRYPOINT or hardcode the script path."
+          }
+      
+          "ENTRY=$($entry.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Using entrypoint: $($entry.FullName)"
+      
+            # Build (PowerShell; no caret continuations needed)
+            - name: Build onefile exe
+              shell: pwsh
+              run: pyinstaller --onefile --name mytool --add-data "config\config.yaml;config" "$env:ENTRY"
+      
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: mytool-windows
+                path: dist/mytool.exe
