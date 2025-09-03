@@ -1,3 +1,4 @@
+# .github/workflows/build-exe.yml
 name: build-exe
 on:
   push:
@@ -19,24 +20,43 @@ jobs:
           python -m pip install -U pip
           pip install -r requirements.txt pyinstaller
 
-      # ── wipe .env values but keep keys/comments (bash+awk) ───────────────
-      - name: Zero out values (preserve comments/blank lines)
-        shell: bash
+      # (optional) Show where files actually are
+      - name: Debug tree (top 3 levels)
+        shell: pwsh
         run: |
-          if [ -f .env ]; then
-            awk -F= 'BEGIN{OFS="="}
-              /^[[:space:]]*#/ || /^[[:space:]]*$/ {print; next}
-              { $2=""; print }
-            ' .env > .env.tmp && mv .env.tmp .env
-          fi
+          Get-ChildItem -Recurse -Depth 3 | Select-Object FullName
 
-      # Use CMD so caret (^) line continuations work on Windows
-      - name: Build onefile exe (CMD)
-        shell: cmd
+      # Find a reasonable entrypoint automatically
+      - name: Locate entrypoint
+        shell: pwsh
         run: |
-          pyinstaller --onefile --name mytool ^
-            --add-data "config\config.yaml;config" ^
-            src\main.py
+          $candidates = @(
+            'src\main.py',
+            'main.py',
+            'app\main.py',
+            'src\mytool\__main__.py'
+          ) | ForEach-Object { Join-Path $PWD $_ }
+          $entry = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $entry) {
+            Write-Host "No candidate found. Found these main-like files:"
+            Get-ChildItem -Recurse -File -Include main.py,__main__.py | ForEach-Object FullName
+            throw "Set your correct script path (e.g. src\main.py) or adjust the candidates."
+          }
+          "ENTRY=$entry" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Using entrypoint: $entry"
+
+      # If you bundle config, ensure the path exists
+      - name: Check add-data paths
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "config\config.yaml")) {
+            Write-Warning "config\config.yaml not found; remove --add-data or fix the path."
+          }
+
+      # Build (PowerShell; no caret continuations needed)
+      - name: Build onefile exe
+        shell: pwsh
+        run: pyinstaller --onefile --name mytool --add-data "config\config.yaml;config" "$env:ENTRY"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
