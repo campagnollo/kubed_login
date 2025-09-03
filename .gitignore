@@ -2,3 +2,8 @@
 /clusters-trunc.yaml
 /playbooks/clusters-trunc.yml
 /.env
+
+# local secrets
+.env
+*.env
+.env.*
