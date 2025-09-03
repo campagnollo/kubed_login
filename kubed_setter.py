@@ -1,4 +1,4 @@
-import os, sys, subprocess, shlex, shutil, yaml
+import os, sys, subprocess, yaml
 from pathlib import Path
 from dotenv import set_key, load_dotenv, find_dotenv
 
@@ -50,10 +50,6 @@ def vault_load():
     dotenv_path.touch()
     set_key(str(dotenv_path), "VAULT_TOKEN", vault_var, quote_mode="always")
     print("Vault token key uploaded")
-
-
-
-
 
 
 if __name__ == "__main__":
