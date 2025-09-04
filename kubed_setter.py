@@ -86,13 +86,13 @@ def vault_load():
 
 
 if __name__ == "__main__":
-    vault_load()
-    # try:
-    #     if sys.argv[1] == "vault":
-    #         vault_load()
-    #     else:
-    #         main(sys.argv[1])
-    # except IndexError:
-    #     print("Cluster name or vault required as a argument")
-    #     exit()
+    #vault_load()
+    try:
+        if sys.argv[1] == "vault":
+            vault_load()
+        else:
+            main(sys.argv[1])
+    except IndexError:
+        print("Cluster name or vault required as a argument")
+        exit()
 
