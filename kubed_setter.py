@@ -72,9 +72,13 @@ def vault_load():
     if "hvs.CAE" not in vault_var:
         print("Vault token key not in clipboard. Exiting")
         sys.exit(1)
-    dotenv_path = Path(".env")
-    dotenv_path.touch()
-    set_key(str(dotenv_path), "VAULT_TOKEN", vault_var, quote_mode="always")
+    p=Path(Path.home()/"k8s/.env")
+    if p.exists():
+        pass
+    else:
+        dotenv_path = Path(".env")
+        dotenv_path.touch()
+    set_key(str(p), "VAULT_TOKEN", vault_var, quote_mode="always")
     pyperclip.copy("")
     print("Vault token key uploaded")
 
