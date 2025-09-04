@@ -44,7 +44,7 @@ def main(cluster_name):
     if not workdir.exists():
         print(f"ERROR: missing directory {workdir}", file=sys.stderr); sys.exit(1)
     os.chdir(workdir)
-    sign_on = Path.home()/"k8s/"+c["SIGN_ON"]
+    sign_on = Path.home()/"k8s/"/c["SIGN_ON"]
     if platform.system() == "Darwin":
         subprocess.run(["/bin/zsh", "-lic", sign_on], check=True, env=env)
     elif platform.system() == "Windows":
@@ -58,7 +58,7 @@ def main(cluster_name):
 def vault_load():
     s = platform.system()
     if s == "Darwin":
-        out = subprocess.check_output(["pbpaste", "-Prefer", "txt"])
+        out = subprocess.check_output(["pbpaste", "-Prefer", "txt"], text=True, encoding="utf-8")
     elif s == "Windows":
         out = subprocess.check_output(
             ["powershell", "-NoProfile", "-Command",
@@ -68,15 +68,17 @@ def vault_load():
     else:
         print("OS not identified. Exiting.")
         exit()
-    vault_var = out.decode("utf-8").rstrip("\r\n")
+    vault_var = out.rstrip("\r\n")
     if "hvs.CAE" not in vault_var:
         print("Vault token key not in clipboard. Exiting")
         sys.exit(1)
     p=Path(Path.home()/"k8s/.env")
+    #p = Path(Path.home() / "Pycharmprojects/k8s_setup/.env")
     if p.exists():
         pass
     else:
-        dotenv_path = Path(".env")
+        dotenv_path = Path.home() / "k8s/.env"
+        #dotenv_path = Path.home() / "Pycharmprojects/k8s_setup/.env"
         dotenv_path.touch()
     set_key(str(p), "VAULT_TOKEN", vault_var, quote_mode="always")
     pyperclip.copy("")
@@ -84,12 +86,13 @@ def vault_load():
 
 
 if __name__ == "__main__":
-    try:
-        if sys.argv[1] == "vault":
-            vault_load()
-        else:
-            main(sys.argv[1])
-    except IndexError:
-        print("Cluster name or vault required as a argument")
-        exit()
+    vault_load()
+    # try:
+    #     if sys.argv[1] == "vault":
+    #         vault_load()
+    #     else:
+    #         main(sys.argv[1])
+    # except IndexError:
+    #     print("Cluster name or vault required as a argument")
+    #     exit()
 
