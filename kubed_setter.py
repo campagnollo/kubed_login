@@ -2,12 +2,10 @@ import os, sys, subprocess, yaml
 from pathlib import Path
 from dotenv import set_key, load_dotenv, find_dotenv
 import pyperclip
-import platform
 
 
 
 def main(cluster_name):
-
     env_path = find_dotenv(".env", usecwd=True)
     if not env_path:
         print("ERROR: .env not found", file=sys.stderr); sys.exit(1)
@@ -31,62 +29,33 @@ def main(cluster_name):
         "VAULT_NAMESPACE": c["VAULT_NAMESPACE"],
         "VAULT_TOKEN":     token,
     })
-    paths = [env.get("PATH", "")]
-    if platform.system() == "Darwin":
-        paths = ["/usr/local/bin", "/opt/homebrew/bin"] + paths
-    elif platform.system() == "Windows":
-        paths = [
-                    r"C:\Program Files\Git\bin",
-                    r"C:\Windows\System32",
-                ] + paths
-    env["PATH"] = os.pathsep.join(paths)
+    env["PATH"] = os.pathsep.join([
+        "/usr/local/bin",          # Intel Homebrew
+        "/opt/homebrew/bin",       # Apple Silicon Homebrew
+        env.get("PATH",""),
+    ])
     workdir = Path.home() / "k8s"
     if not workdir.exists():
         print(f"ERROR: missing directory {workdir}", file=sys.stderr); sys.exit(1)
     os.chdir(workdir)
-    sign_on = Path.home()/"k8s/"/c["SIGN_ON"]
-    if platform.system() == "Darwin":
-        subprocess.run(["/bin/zsh", "-lic", sign_on], check=True, env=env)
-    elif platform.system() == "Windows":
-        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", sign_on], check=True,
-                       env=env)
-    else:
-        print("OS not identified. Exiting.")
-        exit()
+    sign_on = "/Users/ericmoo/k8s/"+c["SIGN_ON"]
+    subprocess.run(["/bin/zsh", "-lic", sign_on], check=True, env=env)
 
 #
 def vault_load():
-    s = platform.system()
-    if s == "Darwin":
-        out = subprocess.check_output(["pbpaste", "-Prefer", "txt"], text=True, encoding="utf-8")
-    elif s == "Windows":
-        out = subprocess.check_output(
-            ["powershell", "-NoProfile", "-Command",
-             "[Console]::OutputEncoding=[Text.UTF8Encoding]::UTF8; Get-Clipboard"],
-            text=True
-        ).rstrip("\r\n")
-    else:
-        print("OS not identified. Exiting.")
-        exit()
-    vault_var = out.rstrip("\r\n")
+    out = subprocess.check_output(["pbpaste", "-Prefer", "txt"])
+    vault_var = out.decode("utf-8").rstrip("\r\n")
     if "hvs.CAE" not in vault_var:
         print("Vault token key not in clipboard. Exiting")
         sys.exit(1)
-    p=Path(Path.home()/"k8s/.env")
-    #p = Path(Path.home() / "Pycharmprojects/k8s_setup/.env")
-    if p.exists():
-        pass
-    else:
-        dotenv_path = Path.home() / "k8s/.env"
-        #dotenv_path = Path.home() / "Pycharmprojects/k8s_setup/.env"
-        dotenv_path.touch()
-    set_key(str(p), "VAULT_TOKEN", vault_var, quote_mode="always")
+    dotenv_path = Path(".env")
+    dotenv_path.touch()
+    set_key(str(dotenv_path), "VAULT_TOKEN", vault_var, quote_mode="always")
     pyperclip.copy("")
     print("Vault token key uploaded")
 
 
 if __name__ == "__main__":
-    #vault_load()
     try:
         if sys.argv[1] == "vault":
             vault_load()
