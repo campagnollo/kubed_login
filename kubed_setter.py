@@ -4,6 +4,9 @@ from dotenv import set_key, load_dotenv, find_dotenv
 import pyperclip
 import platform
 
+# tests/test_smoke.py
+def test_smoke():
+    assert True
 
 
 def main(cluster_name:str):
