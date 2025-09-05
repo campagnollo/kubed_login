@@ -6,7 +6,7 @@ import platform
 
 
 
-def main(cluster_name):
+def main(cluster_name:str):
 
     env_path = find_dotenv(".env", usecwd=True)
     if not env_path:

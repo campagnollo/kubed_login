@@ -1,45 +1,26 @@
-name: build-exe
+# .github/workflows/windows-ci.yml
+name: Windows CI (no exe)
 on:
-  push:
-  workflow_dispatch:
+  push: { branches: [ main ] }
+  pull_request:
 
 jobs:
-  win:
+  test:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
-      - name: Debug layout (top 2 levels)
-        shell: pwsh
-        run: Get-ChildItem -Recurse -Depth 2 | Select-Object FullName
+          python-version: ${{ matrix.python-version }}
 
       - name: Install deps
-        shell: pwsh
         run: |
           python -m pip install -U pip
-          pip install -r requirements.txt pyinstaller
+          if exist requirements.txt (pip install -r requirements.txt)
+          pip install pytest
 
-      # 👇 CHANGE THIS if your entry file is named differently or in a subfolder
-      - name: Build onefile exe
-        shell: pwsh
-        run: |
-          $entry = "kubed_setter.py"
-          if (-not (Test-Path $entry)) { throw "Entry script not found: $entry (check repo tree above)" }
-
-          if (Test-Path "clusters-trunc.yaml") {
-            pyinstaller --onefile --name kubed_setter --add-data "clusters-trunc.yaml;." $entry
-          } elseif (Test-Path "config\config.yaml") {
-            pyinstaller --onefile --name kubed_setter --add-data "config\config.yaml;config" $entry
-          } else {
-            pyinstaller --onefile --name kubed_setter $entry
-          }
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kubed_setter-windows
-          path: dist/kubed_setter.exe
+      - name: Run tests
+        run: pytest -q
