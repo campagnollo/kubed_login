@@ -58,7 +58,7 @@ def main(cluster_name:str):
             print("OS not identified. Exiting.")
             exit()
     except subprocess.CalledProcessError as e:
-        print("Vault token has expired. Please refresh the token.")
+        print("*****Vault token has expired. Please refresh the token.")
         exit()
 
 #
