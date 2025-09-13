@@ -48,13 +48,17 @@ def main(cluster_name:str):
         print(f"ERROR: missing directory {workdir}", file=sys.stderr); sys.exit(1)
     os.chdir(workdir)
     sign_on = Path.home()/"k8s/"/c["SIGN_ON"]
-    if platform.system() == "Darwin":
-        subprocess.run(["/bin/zsh", "-lic", sign_on], check=True, env=env)
-    elif platform.system() == "Windows":
-        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", sign_on], check=True,
-                       env=env)
-    else:
-        print("OS not identified. Exiting.")
+    try:
+        if platform.system() == "Darwin":
+            subprocess.run(["/bin/zsh", "-lic", sign_on], check=True, env=env)
+        elif platform.system() == "Windows":
+            subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", sign_on], check=True,
+                           env=env)
+        else:
+            print("OS not identified. Exiting.")
+            exit()
+    except subprocess.CalledProcessError as e:
+        print("Vault token has expired. Please refresh the token.")
         exit()
 
 #
